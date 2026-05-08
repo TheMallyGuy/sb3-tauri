@@ -6,6 +6,9 @@
         "types": ["node"],
     "module": "CommonJS",
     "target": "ES6",
-    "rootDir": "src"
+    "rootDir": "src",
+        "paths": {
+      "@turbowarp/packager": ["./types/@turbowarp/packager.d.ts"]
+    }
   }
 }
