@@ -1,16 +1,31 @@
 import { exec } from "child_process";
+import { promisify } from "util";
 
-export function testInstallation() { // more tests in the future
-  exec("rustup --version", (error, stdout, stderr) => {
-    if (error) {
-      console.log(
-        `You don't have Rustup installed. Please follow Tauri Prerequisites and then try again.\n` +
-        `Tauri Prerequisites: https://tauri.app/start/prerequisites\n` +
-        `Logs: ${stderr || error.message}`
-      );
-      return;
-    }
+const execPromise = promisify(exec);
 
-    console.log(`Health check complete with no errors. (${stdout.trim()})`);
-  });
+async function checkDependency(command: string, name: string): Promise<boolean> {
+  try {
+    const { stdout } = await execPromise(`${command} --version`);
+    console.log(`${name} is installed ! (${stdout.trim()})`);
+    return true;
+  } catch {
+    console.log(
+      `${name} is not installed or not in PATH.\n` +
+      `Tauri Prerequisites: https://tauri.app/start/prerequisites`
+    );
+    return false;
+  }
+}
+
+export async function testInstallation() {
+  const results = await Promise.all([
+    checkDependency("rustup", "rustup"),
+    checkDependency("npm", "npm"),
+  ]);
+
+  if (results.every(Boolean)) {
+    console.log("Health check complete with no errors.");
+  } else {
+    console.log("Health check failed. Please install the missing dependencies and try again.");
+  }
 }
