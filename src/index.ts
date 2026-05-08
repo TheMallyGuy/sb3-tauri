@@ -11,5 +11,13 @@ program
     })
 
 
+program
+    .command("build")
+    .description("build a .sb3 to a Tauri app.")
+    .requiredOption("--sb3 <path to sb3>")
+    .action(async (option) =>{
+        build(option.sb3, option.identifier, option.name)
+    })
+
 program.parse(process.argv);
 

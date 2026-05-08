@@ -6,7 +6,7 @@ const execPromise = promisify(exec);
 async function checkDependency(command: string, name: string): Promise<boolean> {
   try {
     const { stdout } = await execPromise(`${command} --version`);
-    console.log(`${name} is installed ! (${stdout.trim()})`);
+    console.log(`${name} is installed! (${stdout.trim()})`);
     return true;
   } catch {
     console.log(
