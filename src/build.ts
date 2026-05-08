@@ -1,6 +1,9 @@
 import { testInstallation } from "./check"
 import chalk from 'chalk'
-import { applyPatch, readJson, TauriConfig } from "./tauri-helper";
+import { applyPatch, readJson, saveJson, TauriConfig } from "./tauri-helper";
+import { readFileSync, writeFileSync } from "fs";
+import { Packager, loadProject } from '@turbowarp/packager';
+import { join } from "path";
 
 export const build = async (pathToSb3: string, identifier?: string, appName?: string, width?: number, height?: string) => {
     console.log("Stand by, we're getting things ready!!")
@@ -16,7 +19,25 @@ export const build = async (pathToSb3: string, identifier?: string, appName?: st
 
     const data: TauriConfig = await readJson(tauri)
 
-    await applyPatch(data)
+    const patch = await applyPatch(data)
 
+    await saveJson(tauri, patch)
+
+    console.log("Packaging...")
+        
+    const sb3Buffer = readFileSync(pathToSb3);
+
+    const loadedProject = await loadProject(sb3Buffer, () => { });
+
+    const p = new Packager();
+    
+    p.project = loadedProject;
+    
+    p.options.target = 'html';
+
+    const { data: html } = await p.package();
+    
+    writeFileSync(join("./tauri-bin/src/index.html"), html as string);
+    
     console.log("Done!")
 }

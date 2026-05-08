@@ -35,10 +35,20 @@ export async function readJson(jsonPath: string): Promise<TauriConfig> {
     }
 }
 
-export async function saveJson(jsonPath: string, content: string) {
+export async function saveJson(
+    jsonPath: string,
+    content: TauriConfig
+) {
     try {
         const tauri = path.join(jsonPath, "tauri.conf.json")
-        const text = await saveJson(tauri, content)
+
+        await writeFile(
+            tauri,
+            JSON.stringify(content, null, 2),
+            "utf-8"
+        )
+        
+        console.log("wrote patch")
     } catch (err) {
         console.error(`Something went wrong: ${err}`)
 
@@ -46,7 +56,7 @@ export async function saveJson(jsonPath: string, content: string) {
     }
 }
 
-export async function applyPatch(patchFile: TauriConfig, identifier?: string, appName?: string, width?: number, height?: number, autosave?: boolean) {
+export async function applyPatch(patchFile: TauriConfig, identifier?: string, appName?: string, width?: number, height?: number, autosave?: boolean): Promise<TauriConfig> {
     try {
         const uuid = uuidv4() // im sure 100% there is a much better way to do this
 
@@ -56,15 +66,17 @@ export async function applyPatch(patchFile: TauriConfig, identifier?: string, ap
         patchFile.app.windows = [
             {
                 title : "sb3 Tauri App",
-                height : height ?? 800,
-                width: height ?? 600
+                height : height ?? 489,
+                width: height ?? 650
             }
         ]
 
         console.log(`Patched app with uuid : ${uuid}`)
 
-
+        return patchFile as TauriConfig
     } catch (err) {
         console.log(`Something went wrong when creating patch : ${err}`)
+
+        throw err
     }
 }
