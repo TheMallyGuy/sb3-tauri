@@ -48,7 +48,7 @@ export async function saveJson(
             "utf-8"
         )
         
-        console.log("wrote patch")
+        console.log("Wrote patch! \n")
     } catch (err) {
         console.error(`Something went wrong: ${err}`)
 

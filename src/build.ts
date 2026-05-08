@@ -11,9 +11,9 @@ export const build = async (pathToSb3: string, identifier?: string, appName?: st
     await testInstallation()
 
     console.log('\n')
-    console.log("Building app")
+    console.log("Building app \n")
 
-    console.log("Creating new patch")
+    console.log("Creating new patch \n")
 
     const tauri = "./tauri-bin/src-tauri/"
 
@@ -23,8 +23,8 @@ export const build = async (pathToSb3: string, identifier?: string, appName?: st
 
     await saveJson(tauri, patch)
 
-    console.log("Packaging...")
-        
+    console.log("Packaging...\n")
+
     const sb3Buffer = readFileSync(pathToSb3);
 
     const loadedProject = await loadProject(sb3Buffer, () => { });
@@ -39,5 +39,7 @@ export const build = async (pathToSb3: string, identifier?: string, appName?: st
     
     writeFileSync(join("./tauri-bin/src/index.html"), html as string);
     
+    console.log("\n");
+
     console.log("Done!")
 }
