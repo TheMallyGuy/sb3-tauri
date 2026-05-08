@@ -1,5 +1,5 @@
 
-import { readFile } from "fs/promises"
+import { readFile, writeFile } from "fs/promises"
 import path from "path"
 
 export type TauriConfig = { // jsut leave this on export might need later
@@ -35,7 +35,18 @@ export async function readJson(jsonPath: string): Promise<TauriConfig> {
     }
 }
 
-export async function applyPatch(patchFile: TauriConfig, identifier?: string, appName?: string, width?: number, height?: number) {
+export async function saveJson(jsonPath: string, content: string) {
+    try {
+        const tauri = path.join(jsonPath, "tauri.conf.json")
+        const text = await saveJson(tauri, content)
+    } catch (err) {
+        console.error(`Something went wrong: ${err}`)
+
+        throw err
+    }
+}
+
+export async function applyPatch(patchFile: TauriConfig, identifier?: string, appName?: string, width?: number, height?: number, autosave?: boolean) {
     try {
         const uuid = uuidv4() // im sure 100% there is a much better way to do this
 
