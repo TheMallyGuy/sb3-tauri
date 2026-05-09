@@ -20,7 +20,7 @@ program
     .option("--width <number>", "change width of the app")
     .option("--height <number>", "change the height of the app")
     .option("--icon <path to icon>", "change the icon of the app (svg, png)")
-    .option("--package-manager <manager>", "package manager to use (pnpm, npm, yarn, bun)")
+    .option("--package-manager <manager>", "package manager to use (pnpm, npm, yarn)")
     .action(async (option) => {
         build(option.sb3, option.identifier, option.name, option.width, option.height, option.icon, option.packageManager)
     })
