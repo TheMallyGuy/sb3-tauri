@@ -1,11 +1,11 @@
 import { testInstallation } from "./check"
 import chalk from 'chalk'
-import { applyPatch, readJson, saveJson, TauriConfig } from "./tauri-helper";
+import { applyPatch, installDeps, readJson, saveJson, setIcon, TauriConfig } from "./tauri-helper";
 import { readFileSync, writeFileSync } from "fs";
 import { Packager, loadProject } from '@turbowarp/packager';
 import { join } from "path";
 
-export const build = async (pathToSb3: string, identifier?: string, appName?: string, width?: number, height?: string) => {
+export const build = async (pathToSb3: string, identifier?: string, appName?: string, width?: number, height?: string, iconPath? : string) => {
     console.log("Stand by, we're getting things ready!!")
 
     await testInstallation()
@@ -22,6 +22,19 @@ export const build = async (pathToSb3: string, identifier?: string, appName?: st
     const patch = await applyPatch(data)
 
     await saveJson(tauri, patch)
+
+
+    console.log("Installing dependency...");
+
+    await installDeps(tauri)
+
+    console.log("Setting icon...");
+
+    if (iconPath) {
+        await setIcon(iconPath, tauri)
+    } else {
+        await setIcon('./templates/sb32Tauri.svg', tauri)
+    }
 
     console.log("Packaging...\n")
 

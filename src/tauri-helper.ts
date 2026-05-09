@@ -1,6 +1,8 @@
 
 import { readFile, writeFile } from "fs/promises"
 import path from "path"
+import { exec } from "child_process";
+
 
 export type TauriConfig = { // jsut leave this on export might need later
     productName: string
@@ -17,9 +19,9 @@ export type TauriConfig = { // jsut leave this on export might need later
 }
 
 function uuidv4() {
-  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-    (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
-  );
+    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+        (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+    );
 }
 
 export async function readJson(jsonPath: string): Promise<TauriConfig> {
@@ -47,7 +49,7 @@ export async function saveJson(
             JSON.stringify(content, null, 2),
             "utf-8"
         )
-        
+
         console.log("Wrote patch! \n")
     } catch (err) {
         console.error(`Something went wrong: ${err}`)
@@ -56,7 +58,32 @@ export async function saveJson(
     }
 }
 
-export async function applyPatch(patchFile: TauriConfig, identifier?: string, appName?: string, width?: number, height?: number, autosave?: boolean): Promise<TauriConfig> {
+export async function setIcon(iconFile: string, tauriBin: string) {
+    exec(
+        `pnpm tauri icon "${path.resolve(iconFile)}"`,
+        {
+            cwd: path.join(tauriBin)
+        },
+        (error, stdout, stderr) => {
+            if (error) {
+                console.error("Command failed")
+                console.error(error.message)
+                console.error(stderr)
+                return
+            }
+
+            console.log(stdout)
+        }
+    )
+    console.log("Wrote Icon");
+}
+
+export async function installDeps(tauriBin: string) {
+    exec(`pnpm i`, { cwd: path.join(tauriBin) })
+    console.log("Installed all deps");
+}
+
+export async function applyPatch(patchFile: TauriConfig, identifier?: string, appName?: string, width?: number, height?: number): Promise<TauriConfig> {
     try {
         const uuid = uuidv4() // im sure 100% there is a much better way to do this
 
@@ -65,8 +92,8 @@ export async function applyPatch(patchFile: TauriConfig, identifier?: string, ap
 
         patchFile.app.windows = [
             {
-                title : "sb3 Tauri App",
-                height : height ?? 489,
+                title: "sb3 Tauri App",
+                height: height ?? 489,
                 width: height ?? 650
             }
         ]
