@@ -1,10 +1,46 @@
 import { testInstallation } from "./check"
 import chalk from 'chalk'
-import { applyPatch, buildApp, installDeps, readJson, saveJson, setIcon, TauriConfig } from "./tauri-helper";
-import { readFileSync, writeFileSync } from "fs";
-import { Packager, loadProject } from '@turbowarp/packager';
+import { applyPatch, buildApp, installDeps, readJson, saveJson, setIcon, TauriConfig, config } from "./tauri-helper";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
-import { config } from "./tauri-helper"
+
+const SCAFFOLDING_VERSION = '3.12.0'; // pin this, never use @latest
+
+function generateHtml(sb3Buffer: Buffer, width: number, height: number): string {
+    const base64 = sb3Buffer.toString('base64');
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    #project { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="project"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@turbowarp/packager@${SCAFFOLDING_VERSION}/dist/scaffolding/scaffolding-full.js"></script>
+  <script>
+    const base64 = "${base64}";
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+    const scaffolding = new Scaffolding.Scaffolding();
+    scaffolding.width = ${width};
+    scaffolding.height = ${height};
+    scaffolding.resizeMode = 'dynamic-resize';
+    scaffolding.setup();
+    scaffolding.appendTo(document.getElementById('project'));
+
+    scaffolding.loadProject(bytes.buffer)
+      .then(() => scaffolding.start())
+      .catch(console.error);
+  </script>
+</body>
+</html>`;
+}
 
 export const build = async (
     pathToSb3: string,
@@ -16,13 +52,12 @@ export const build = async (
     packageManager?: string,
 ) => {
     console.log(chalk.cyan.bold("Stand by, we're getting things ready!!"))
-
     config.packageManager = packageManager ?? 'npm'
-
     await testInstallation()
-    console.log(chalk.cyan.bold("Building app"))
-    console.log(chalk.blue("⚙ Creating new patch..."))
 
+    console.log(chalk.cyan.bold("Building app"))
+
+    console.log(chalk.blue("⚙ Creating new patch..."))
     const tauri = "./tauri-bin/src-tauri/"
     const data: TauriConfig = await readJson(tauri)
     const patch = await applyPatch(data, identifier, appName, width, height)
@@ -36,14 +71,13 @@ export const build = async (
 
     console.log(chalk.blue("⚙ Packaging..."))
     const sb3Buffer = readFileSync(pathToSb3);
-    const loadedProject = await loadProject(sb3Buffer, () => { });
-    const p = new Packager();
+    const resolvedWidth = width ?? 480;
+    const resolvedHeight = height ?? 360;
+    const html = generateHtml(sb3Buffer, resolvedWidth, resolvedHeight);
 
-    p.project = loadedProject;
-    p.options.target = 'html';
-
-    const { data: html } = await p.package();
-    writeFileSync(join("./tauri-bin/src/index.html"), html as string);
+    const outDir = "./tauri-bin/src";
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(join(outDir, "index.html"), html);
 
     console.log(chalk.blue("⚙ Building app..."))
     await buildApp(tauri)

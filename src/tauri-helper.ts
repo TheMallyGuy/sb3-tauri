@@ -93,9 +93,9 @@ export async function applyPatch(
         patchFile.productName = appName ?? `sb3-tauri-${uuid}`
         patchFile.app.windows = [
             {
-                title: "sb3 Tauri App",
-                height: height ?? 489,
-                width: width ?? 650
+                title: appName ?? "sb3 Tauri App",
+                width: width ?? 480,
+                height: height ?? 360
             }
         ]
         console.log(chalk.cyan(`⚙ Patched app with uuid: ${chalk.bold(uuid)}`))
