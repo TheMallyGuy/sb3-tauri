@@ -1,10 +1,9 @@
-
 import { readFile, writeFile } from "fs/promises"
 import path from "path"
 import { exec } from "child_process";
+import chalk from "chalk";
 
-
-export type TauriConfig = { // jsut leave this on export might need later
+export type TauriConfig = {
     productName: string
     identifier: string
     app: {
@@ -28,97 +27,77 @@ export async function readJson(jsonPath: string): Promise<TauriConfig> {
     try {
         const tauri = path.join(jsonPath, "tauri.conf.json")
         const text = await readFile(tauri, "utf-8")
-
         return JSON.parse(text) as TauriConfig
     } catch (err) {
-        console.error(`Something went wrong: ${err}`)
-
+        console.error(chalk.red(`✖ Something went wrong reading config: ${err}`))
         throw err
     }
 }
 
-export async function saveJson(
-    jsonPath: string,
-    content: TauriConfig
-) {
+export async function saveJson(jsonPath: string, content: TauriConfig) {
     try {
         const tauri = path.join(jsonPath, "tauri.conf.json")
-
-        await writeFile(
-            tauri,
-            JSON.stringify(content, null, 2),
-            "utf-8"
-        )
-
-        console.log("Wrote patch! \n")
+        await writeFile(tauri, JSON.stringify(content, null, 2), "utf-8")
+        console.log(chalk.green("✔ Wrote patch!"))
     } catch (err) {
-        console.error(`Something went wrong: ${err}`)
-
+        console.error(chalk.red(`✖ Something went wrong saving config: ${err}`))
         throw err
     }
+}
+
+function execAsync(command: string, cwd: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+        exec(command, { cwd: path.join(cwd) }, (error, stdout, stderr) => {
+            if (error) {
+                console.error(chalk.red("✖ Command failed"))
+                console.error(chalk.red(error.message))
+                if (stderr) console.error(chalk.yellow(stderr))
+                reject(error)
+                return
+            }
+            if (stdout) console.log(chalk.gray(stdout))
+            resolve()
+        })
+    })
 }
 
 export async function setIcon(iconFile: string, tauriBin: string) {
-    exec(
-        `pnpm tauri icon "${path.resolve(iconFile)}"`,
-        {
-            cwd: path.join(tauriBin)
-        },
-        (error, stdout, stderr) => {
-            if (error) {
-                console.error("Command failed")
-                console.error(error.message)
-                console.error(stderr)
-                return
-            }
-
-            console.log(stdout)
-        }
-    )
-    console.log("Wrote Icon");
+    await execAsync(`pnpm tauri icon "${path.resolve(iconFile)}"`, tauriBin)
+    console.log(chalk.green("✔ Wrote icon"))
 }
 
 export async function installDeps(tauriBin: string) {
-        exec(
-        `pnpm i`,
-        {
-            cwd: path.join(tauriBin)
-        },
-        (error, stdout, stderr) => {
-            if (error) {
-                console.error("Command failed")
-                console.error(error.message)
-                console.error(stderr)
-                return
-            }
-
-            console.log(stdout)
-        }
-    )
-    console.log("Installed all deps");
+    await execAsync(`pnpm i`, tauriBin)
+    console.log(chalk.green("✔ Installed all deps"))
 }
 
-export async function applyPatch(patchFile: TauriConfig, identifier?: string, appName?: string, width?: number, height?: number): Promise<TauriConfig> {
+export async function buildApp(tauriBin: string) {
+    await execAsync(`pnpm tauri build --no-bundle`, tauriBin)
+    console.log(chalk.green("✔ Built"))
+}
+
+export async function applyPatch(
+    patchFile: TauriConfig,
+    identifier?: string,
+    appName?: string,
+    width?: number,
+    height?: number
+): Promise<TauriConfig> {
     try {
-        const uuid = uuidv4() // im sure 100% there is a much better way to do this
-
+        const uuid = uuidv4()
         patchFile.identifier = identifier ?? `com.mally.sb3-tauri.packaged-${uuid}`
-        patchFile.productName = identifier ?? `sb3-tauri-${uuid}`
-
+        patchFile.productName = appName ?? `sb3-tauri-${uuid}`
         patchFile.app.windows = [
             {
                 title: "sb3 Tauri App",
                 height: height ?? 489,
-                width: height ?? 650
+                width: width ?? 650
             }
         ]
-
-        console.log(`Patched app with uuid : ${uuid}`)
-
+        console.log(chalk.cyan(`⚙ Patched app with uuid: ${chalk.bold(uuid)}`))
         return patchFile as TauriConfig
     } catch (err) {
-        console.log(`Something went wrong when creating patch : ${err}`)
-
+        console.error(chalk.red(`✖ Something went wrong when creating patch: ${err}`))
         throw err
     }
 }
