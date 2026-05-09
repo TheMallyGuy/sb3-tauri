@@ -25,7 +25,7 @@ export const build = async (pathToSb3: string, identifier?: string, appName?: st
 
 
     console.log("Installing dependency...");
-
+    
     await installDeps(tauri)
 
     console.log("Setting icon...");

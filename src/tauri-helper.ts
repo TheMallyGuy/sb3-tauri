@@ -79,7 +79,22 @@ export async function setIcon(iconFile: string, tauriBin: string) {
 }
 
 export async function installDeps(tauriBin: string) {
-    exec(`pnpm i`, { cwd: path.join(tauriBin) })
+        exec(
+        `pnpm i`,
+        {
+            cwd: path.join(tauriBin)
+        },
+        (error, stdout, stderr) => {
+            if (error) {
+                console.error("Command failed")
+                console.error(error.message)
+                console.error(stderr)
+                return
+            }
+
+            console.log(stdout)
+        }
+    )
     console.log("Installed all deps");
 }
 
