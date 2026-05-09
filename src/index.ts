@@ -15,8 +15,14 @@ program
     .command("build")
     .description("build a .sb3 to a Tauri app.")
     .requiredOption("--sb3 <path to sb3>")
-    .action(async (option) =>{
-        build(option.sb3, option.identifier, option.name, option.width, option.height, option.icon)
+    .option("--identifier <identifier>", "identifier for the app, e.g com.mally.my-scratch-project ")
+    .option("--name <name>", "name for the app, e.g my new scratch game")
+    .option("--width <number>", "change width of the app")
+    .option("--height <number>", "change the height of the app")
+    .option("--icon <path to icon>", "change the icon of the app (svg, png)")
+    .option("--package-manager <manager>", "package manager to use (pnpm, npm, yarn, bun)")
+    .action(async (option) => {
+        build(option.sb3, option.identifier, option.name, option.width, option.height, option.icon, option.packageManager)
     })
 
 program.parse(process.argv);

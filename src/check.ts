@@ -1,5 +1,6 @@
 import { exec } from "child_process";
 import { promisify } from "util";
+import { config } from './tauri-helper';
 
 const execPromise = promisify(exec);
 
@@ -20,7 +21,7 @@ async function checkDependency(command: string, name: string): Promise<boolean> 
 export async function testInstallation() {
   const results = await Promise.all([
     checkDependency("rustup", "rustup"),
-    checkDependency("npm", "npm"),
+    checkDependency(config.packageManager, config.packageManager),
   ]);
 
   if (results.every(Boolean)) {

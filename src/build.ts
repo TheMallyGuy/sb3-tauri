@@ -4,6 +4,7 @@ import { applyPatch, buildApp, installDeps, readJson, saveJson, setIcon, TauriCo
 import { readFileSync, writeFileSync } from "fs";
 import { Packager, loadProject } from '@turbowarp/packager';
 import { join } from "path";
+import { config } from "./tauri-helper"
 
 export const build = async (
     pathToSb3: string,
@@ -11,9 +12,13 @@ export const build = async (
     appName?: string,
     width?: number,
     height?: number,
-    iconPath?: string
+    iconPath?: string,
+    packageManager?: string,
 ) => {
     console.log(chalk.cyan.bold("Stand by, we're getting things ready!!"))
+
+    config.packageManager = packageManager ?? 'npm'
+
     await testInstallation()
     console.log(chalk.cyan.bold("Building app"))
     console.log(chalk.blue("⚙ Creating new patch..."))

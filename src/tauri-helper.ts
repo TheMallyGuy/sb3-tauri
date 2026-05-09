@@ -3,6 +3,10 @@ import path from "path"
 import { exec } from "child_process";
 import chalk from "chalk";
 
+export const config = {
+    packageManager: "pnpm"
+}
+
 export type TauriConfig = {
     productName: string
     identifier: string
@@ -62,17 +66,17 @@ function execAsync(command: string, cwd: string): Promise<void> {
 }
 
 export async function setIcon(iconFile: string, tauriBin: string) {
-    await execAsync(`pnpm tauri icon "${path.resolve(iconFile)}"`, tauriBin)
+    await execAsync(`${config.packageManager} tauri icon "${path.resolve(iconFile)}"`, tauriBin)
     console.log(chalk.green("✔ Wrote icon"))
 }
 
 export async function installDeps(tauriBin: string) {
-    await execAsync(`pnpm i`, tauriBin)
+    await execAsync(`${config.packageManager} i`, tauriBin)
     console.log(chalk.green("✔ Installed all deps"))
 }
 
 export async function buildApp(tauriBin: string) {
-    await execAsync(`pnpm tauri build --no-bundle`, tauriBin)
+    await execAsync(`${config.packageManager} tauri build --no-bundle`, tauriBin)
     console.log(chalk.green("✔ Built"))
 }
 
