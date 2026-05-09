@@ -15,7 +15,6 @@ export const build = async (
 ) => {
     console.log(chalk.cyan.bold("Stand by, we're getting things ready!!"))
     await testInstallation()
-    console.log('\n')
     console.log(chalk.cyan.bold("Building app"))
     console.log(chalk.blue("⚙ Creating new patch..."))
 
