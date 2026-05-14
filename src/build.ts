@@ -1,12 +1,14 @@
 import { testInstallation } from "./check"
 import chalk from 'chalk'
 import { applyPatch, buildApp, installDeps, readJson, saveJson, setIcon, TauriConfig, config } from "./tauri-helper";
-import { readFileSync, writeFileSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, fstat } from "fs";
 import { join } from "path";
+import fs from 'node:fs'
+import https from "node:https"
 
 const SCAFFOLDING_VERSION = '3.12.0'; // pin this, never use @latest
 
-function generateHtml(sb3Buffer: Buffer, width: number, height: number): string {
+function generateHtml(sb3Buffer: Buffer, width: number, height: number, scaffolding_type: string): string {
     const base64 = sb3Buffer.toString('base64');
     return `<!DOCTYPE html>
 <html>
@@ -20,7 +22,7 @@ function generateHtml(sb3Buffer: Buffer, width: number, height: number): string 
 </head>
 <body>
   <div id="project"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@turbowarp/packager@${SCAFFOLDING_VERSION}/dist/scaffolding/scaffolding-full.js"></script>
+  <script src="./${scaffolding_type}"></script>
   <script>
     const base64 = "${base64}";
     const binary = atob(base64);
@@ -42,6 +44,43 @@ function generateHtml(sb3Buffer: Buffer, width: number, height: number): string 
 </html>`;
 }
 
+async function get_packager(tauri_bin: string) {
+  const packagerUrl =
+    `https://cdn.jsdelivr.net/npm/@turbowarp/packager@${SCAFFOLDING_VERSION}/dist/scaffolding/scaffolding-full.js`;
+
+  const dest = join(
+    tauri_bin,
+    "src",
+    "scaffolding-full.js"
+  );
+
+  return new Promise<void>((resolve, reject) => {
+    const file = fs.createWriteStream(dest);
+
+    https.get(packagerUrl, (res) => {
+      if (res.statusCode !== 200) {
+        reject(new Error(`HTTP ${res.statusCode}`));
+        return;
+      }
+
+      res.pipe(file);
+
+      file.on("finish", () => {
+        file.close();
+        resolve();
+      });
+    }).on("error", (err) => {
+      fs.unlink(dest, () => {});
+      reject(err);
+    });
+
+    file.on("error", (err) => {
+      fs.unlink(dest, () => {});
+      reject(err);
+    });
+  });
+}
+
 export const build = async (
     pathToSb3: string,
     identifier?: string,
@@ -59,12 +98,14 @@ export const build = async (
 
     console.log(chalk.blue("⚙ Creating new patch..."))
     const tauri = "./tauri-bin/src-tauri/"
+    const bin = "./tauri-bin"
     const data: TauriConfig = await readJson(tauri)
     const patch = await applyPatch(data, identifier, appName, width, height)
     await saveJson(tauri, patch)
 
     console.log(chalk.blue("⚙ Installing dependencies..."))
-    await installDeps(tauri)
+    await installDeps(bin)
+    await get_packager(bin)
 
     console.log(chalk.blue("⚙ Setting icon..."))
     await setIcon(iconPath ?? './templates/sb32Tauri.svg', tauri)
@@ -73,7 +114,7 @@ export const build = async (
     const sb3Buffer = readFileSync(pathToSb3);
     const resolvedWidth = width ?? 480;
     const resolvedHeight = height ?? 360;
-    const html = generateHtml(sb3Buffer, resolvedWidth, resolvedHeight);
+    const html = generateHtml(sb3Buffer, resolvedWidth, resolvedHeight, "scaffolding-full.js");
 
     const outDir = "./tauri-bin/src";
     mkdirSync(outDir, { recursive: true });
