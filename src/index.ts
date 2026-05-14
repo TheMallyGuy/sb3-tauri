@@ -21,8 +21,9 @@ program
     .option("--height <number>", "change the height of the app")
     .option("--icon <path to icon>", "change the icon of the app (svg, png)")
     .option("--package-manager <manager>", "package manager to use (pnpm, npm, yarn)")
+    .option("--options <options>")
     .action(async (option) => {
-        build(option.sb3, option.identifier, option.name, option.width, option.height, option.icon, option.packageManager)
+        build(option.sb3, option.identifier, option.name, option.width, option.height, option.icon, option.packageManager, option.options)
     })
 
 program.parse(process.argv);

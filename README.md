@@ -29,3 +29,31 @@ You can customize this command however you want it to be! Let me break it down f
 `--identifier`: Your identifier for the app, this is not required (sb3-tauri automatically generate for you) but you should set your identifier to something you would.
 `--name` : Name of the main window
 `--icon` : Path to the icon you would use for the app
+
+# Misc
+
+Even more options : 
+
+```
+interface ScaffoldingOptions {
+  turboMode?: boolean;
+  interpolation?: boolean;
+  framerate?: number;
+  highQualityRender?: boolean;
+  maxClones?: number;
+  fencing?: boolean;
+  miscLimits?: boolean;
+  accentColor?: string;
+  username?: string;
+  cloudDataEnabled?: boolean;
+  resizeMode?: 'dynamic-resize' | 'preserve-ratio' | 'stretch';
+  showLaunchScreen?: boolean;
+  editableLists?: boolean;
+}
+```
+
+Use these something like :
+
+```
+npm run sb3-tauri --sb3.... --options {your options here}
+```
